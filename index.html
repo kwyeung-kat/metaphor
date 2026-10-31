@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>比喻小診探 🔍</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f0f4f8; text-align: center; padding: 15px; margin: 0; }
+    .card { background: white; border-radius: 20px; padding: 20px; max-width: 520px; margin: 10px auto; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    h1 { color: #2c3e50; font-size: 24px; margin: 10px 0; }
+    .q-badge { background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 12px; font-size: 15px; font-weight: bold; display: inline-block; }
+    
+    /* 主語小貼士 */
+    .teach-box { background: #eef2ff; border-left: 5px solid #6366f1; border-radius: 12px; padding: 12px 16px; margin: 12px 0; text-align: left; }
+    .teach-title { font-weight: bold; color: #4338ca; font-size: 15px; margin-bottom: 4px; }
+    .teach-text { font-size: 14px; color: #374151; line-height: 1.5; margin: 0; }
+
+    /* 現實場景卡片 */
+    .scene-container { background: #f0fdf4; border: 2px solid #86efac; border-radius: 16px; padding: 14px; margin: 12px 0; }
+    .scene-title { font-size: 14px; font-weight: bold; color: #166534; margin-bottom: 6px; }
+    .scene-icon { font-size: 42px; display: block; margin: 6px 0; }
+    .scene-target { font-size: 15px; font-weight: bold; color: #15803d; background: #ffffff; display: inline-block; padding: 6px 14px; border-radius: 10px; border: 1px solid #bbf7d0; }
+
+    /* 句子與劃線區域 */
+    .sentence-box { background: #ffffff; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 16px; margin: 15px 0; min-height: 60px; font-size: 22px; line-height: 1.8; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; align-items: center; }
+    .word { padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 1px solid #cbd5e1; user-select: none; background: #f8fafc; }
+    
+    /* 螢光筆標記顏色 */
+    .word.bg-yellow { background-color: #fef08a !important; border-color: #fde047 !important; font-weight: bold; color: #854d0e; }
+    .word.bg-red { background-color: #fca5a5 !important; border-color: #f87171 !important; font-weight: bold; color: #991b1b; }
+    .word.bg-blue { background-color: #93c5fd !important; border-color: #60a5fa !important; font-weight: bold; color: #1e40af; }
+
+    /* 工具列 */
+    .palette { display: flex; justify-content: center; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .color-btn { border: 2px solid transparent; padding: 8px 12px; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; }
+    .color-btn.active { border-color: #1e293b; transform: scale(1.05); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    
+    .btn-tool-yellow { background: #fef08a; color: #854d0e; }
+    .btn-tool-red { background: #fca5a5; color: #991b1b; }
+    .btn-tool-blue { background: #93c5fd; color: #1e40af; }
+    .btn-tool-eraser { background: #e2e8f0; color: #475569; }
+
+    /* 按鈕 */
+    .btn { display: block; width: 100%; padding: 16px; margin: 10px 0; border: none; border-radius: 14px; font-size: 18px; font-weight: bold; cursor: pointer; box-sizing: border-box; }
+    .btn-primary { background: #4f46e5; color: white; }
+    .btn-blue { background: #3498db; color: white; }
+    .btn-green { background: #2ecc71; color: white; }
+    .btn-purple { background: #9b59b6; color: white; }
+    .btn-gray { background: #e0e0e0; color: #333; }
+
+    .result { font-size: 20px; font-weight: bold; padding: 18px; border-radius: 14px; margin-top: 15px; line-height: 1.5; }
+    .result-jie { background: #fff3cd; color: #856404; }
+    .result-ming { background: #d4edda; color: #155724; }
+    .result-an { background: #d1ecf1; color: #0c5460; }
+    
+    .hidden { display: none !important; }
+    .hint-text { font-size: 14px; color: #64748b; margin-bottom: 8px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div><span class="q-badge" id="q-num">練習 1 / 3</span></div>
+    <h1>🔍 比喻小診探</h1>
+
+    <!-- 步驟一：劃線圈選區 -->
+    <div id="mark-section">
+      <div class="teach-box">
+        <div class="teach-title">💡 找出主角（主語）小技巧：</div>
+        <p class="teach-text" id="teach-hint">觀察眼前的真實場景，找出我們眼睛真正看到的事物！</p>
+      </div>
+
+      <div class="scene-container">
+        <div class="scene-title">👁️ 眼睛看見的事物（現實）：</div>
+        <span class="scene-icon" id="scene-icon">🏠👦</span>
+        <div><span class="scene-target" id="scene-target">弟弟的臉蛋</span></div>
+      </div>
+
+      <p class="hint-text">選取彩筆，點擊句子圈出成分：</p>
+      
+      <div class="palette">
+        <button class="color-btn btn-tool-yellow active" onclick="setTool('yellow', this)">💛 畫黃色(本體/主語)</button>
+        <button class="color-btn btn-tool-red" onclick="setTool('red', this)">🔴 畫紅色(喻詞/橋樑)</button>
+        <button class="color-btn btn-tool-blue" onclick="setTool('blue', this)">💙 畫藍色(喻體/配角)</button>
+        <button class="color-btn btn-tool-eraser" onclick="setTool('eraser', this)">🧹 橡皮擦</button>
+      </div>
+
+      <div class="sentence-box" id="sentence-container"></div>
+
+      <button class="btn btn-primary" onclick="startDiagnostic()">🩺 圈好了，開啟診斷器！</button>
+    </div>
+
+    <!-- 步驟二：診斷區 -->
+    <div id="diagnostic-section" class="hidden">
+      <div id="step1">
+        <h2 style="color: #495057; font-size: 20px;">【第 1 步】尋找本體</h2>
+        <p style="font-size: 16px; color: #6c757d;">句中有沒有出現<b>💛黃色本體</b>（真實主角）？</p>
+        <button class="btn btn-purple" onclick="goToJie()">❌ 沒有出現本體（主角隱形）</button>
+        <button class="btn btn-blue" onclick="goToStep2()">✅ 有出現黃色本體</button>
+      </div>
+
+      <div id="step2" class="hidden">
+        <h2 style="color: #495057; font-size: 20px;">【第 2 步】辨識喻詞</h2>
+        <p style="font-size: 16px; color: #6c757d;">句子的<b>🔴紅色喻詞</b>（橋樑）是什麼？</p>
+        <button class="btn btn-green" onclick="showResult('ming')">👉 像 / 彷彿 / 宛如 / 如</button>
+        <button class="btn btn-blue" onclick="showResult('an')">👉 是 / 成了 / 變成</button>
+        <button class="btn btn-gray" onclick="backToStep1()">⬅️ 回上一頁</button>
+      </div>
+
+      <div id="res-jie" class="result result-jie hidden">
+        🎯 診斷結果：【 借 喻 】<br>
+        <span style="font-size: 15px; font-weight: normal;"><br>主角（本體）隱形了，直接借用配角（喻體）登場！</span>
+      </div>
+
+      <div id="res-ming" class="result result-ming hidden">
+        🎯 診斷結果：【 明 喻 】<br>
+        <span style="font-size: 15px; font-weight: normal;"><br>三要素都在，看見了「像」字橋樑！</span>
+      </div>
+
+      <div id="res-an" class="result result-an hidden">
+        🎯 診斷結果：【 暗 喻 】<br>
+        <span style="font-size: 15px; font-weight: normal;"><br>三要素都在，看見了「是」字橋樑！</span>
+      </div>
+
+      <button id="next-btn" class="btn btn-gray hidden" onclick="nextQuestion()" style="margin-top: 20px;">➡️ 挑戰下一題</button>
+    </div>
+  </div>
+
+  <script>
+    const exercises = [
+      {
+        words: ["弟弟的臉蛋", "像", "一個", "紅蘋果", "。"],
+        hint: "看一看眼前場景，我們真正看到的事物（主語）是<b>「弟弟的臉蛋」</b>！請用黃色圈出它。",
+        icon: "🏠👦",
+        target: "弟弟的臉蛋"
+      },
+      {
+        words: ["老師", "是", "一盞", "指引方向的", "明燈", "。"],
+        hint: "看一看課堂場景，站在講台上真正被描寫的事物（主語）是<b>「老師」</b>！請用黃色圈出它。",
+        icon: "🏫👩‍🏫",
+        target: "老師"
+      },
+      {
+        words: ["夜空中", "，", "無數的", "鑽石", "閃閃發光", "。"],
+        hint: "抬頭看夜空場景，我們真正看到閃亮的事物是<b>「星星」</b>。但讀一讀句子，這個真正的事物（主語）有被寫出來嗎？",
+        icon: "🌌⭐",
+        target: "星星（留意：句中沒有寫出！）"
+      }
+    ];
+
+    let currentQ = 0;
+    let currentTool = 'yellow';
+
+    function loadQuestion() {
+      const ex = exercises[currentQ];
+      document.getElementById('q-num').innerText = `練習 ${currentQ + 1} / ${exercises.length}`;
+      document.getElementById('teach-hint').innerHTML = ex.hint;
+      document.getElementById('scene-icon').innerText = ex.icon;
+      document.getElementById('scene-target').innerText = ex.target;
+
+      const container = document.getElementById('sentence-container');
+      container.innerHTML = '';
+      ex.words.forEach(text => {
+        const span = document.createElement('span');
+        span.className = 'word';
+        span.innerText = text;
+        span.onclick = function() { applyColor(this); };
+        container.appendChild(span);
+      });
+
+      document.getElementById('mark-section').classList.remove('hidden');
+      document.getElementById('diagnostic-section').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('res-jie').classList.add('hidden');
+      document.getElementById('res-ming').classList.add('hidden');
+      document.getElementById('res-an').classList.add('hidden');
+      document.getElementById('next-btn').classList.add('hidden');
+    }
+
+    function setTool(color, btnBtn) {
+      currentTool = color;
+      document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
+      if(btnBtn) btnBtn.classList.add('active');
+    }
+
+    function applyColor(element) {
+      element.classList.remove('bg-yellow', 'bg-red', 'bg-blue');
+      if (currentTool !== 'eraser') {
+        element.classList.add(`bg-${currentTool}`);
+      }
+    }
+
+    function startDiagnostic() {
+      document.getElementById('mark-section').classList.add('hidden');
+      document.getElementById('diagnostic-section').classList.remove('hidden');
+    }
+
+    function goToStep2() {
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.remove('hidden');
+    }
+
+    function backToStep1() {
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+    }
+
+    function goToJie() {
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('res-jie').classList.remove('hidden');
+      document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function showResult(type) {
+      document.getElementById('step2').classList.add('hidden');
+      if(type === 'ming') document.getElementById('res-ming').classList.remove('hidden');
+      if(type === 'an') document.getElementById('res-an').classList.remove('hidden');
+      document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+      currentQ = (currentQ + 1) % exercises.length;
+      loadQuestion();
+    }
+
+    window.onload = function() {
+      loadQuestion();
+    };
+  </script>
+</body>
+</html>
