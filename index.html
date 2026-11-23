@@ -331,7 +331,7 @@
 
   <!-- ================= 學生身份登記彈窗 (Student Login Modal) ================= -->
   <div id="login-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-indigo-100 space-y-5 animate-in fade-in zoom-in duration-200">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-indigo-100 space-y-5">
       <div class="text-center space-y-2">
         <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-3xl mx-auto font-black shadow-inner">
           🎒
@@ -343,7 +343,7 @@
       <form onsubmit="handleStudentLogin(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">班別 (例如：5D)</label>
-          <input type="text" id="login-class" required placeholder="5D" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none font-bold text-slate-800 text-sm">
+          <input type="text" id="login-class" value="5D" required placeholder="5D" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none font-bold text-slate-800 text-sm">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -379,6 +379,9 @@
         <div class="flex items-center gap-2">
           <button onclick="exportToCSV()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs px-3 py-2 rounded-xl shadow transition flex items-center gap-1">
             <span>📥</span> 導出 CSV 數據
+          </button>
+          <button onclick="openClearConfirmModal()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs px-3 py-2 rounded-xl shadow transition flex items-center gap-1">
+            <span>🗑️</span> 清除數據
           </button>
           <button onclick="toggleTeacherDashboard()" class="text-indigo-200 hover:text-white font-bold text-xl px-2">
             ✕
@@ -439,6 +442,29 @@
     </div>
   </div>
 
+  <!-- ================= 清除數據確認彈窗 (Clear Data Confirmation Modal) ================= -->
+  <div id="clear-confirm-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4 z-[60] hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-rose-100 text-center space-y-4">
+      <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-2xl mx-auto">
+        🗑️
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-lg font-black text-slate-800">確定要清除所有數據嗎？</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          此操作將會清空「教師數據儀表板」內的所有學生作答紀錄與統計數據，且無法還原（建議先點擊「導出 CSV 數據」備份）。
+        </p>
+      </div>
+      <div class="flex gap-2.5 pt-2">
+        <button onclick="closeClearConfirmModal()" class="w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl text-sm transition">
+          取消
+        </button>
+        <button onclick="confirmClearDashboardData()" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold py-3 rounded-xl text-sm shadow-md transition">
+          確認清除
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= 學生個人詳細歷程 Modal (Student Log Detail Modal) ================= -->
   <div id="student-detail-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 z-50 hidden">
     <div class="bg-white rounded-3xl max-w-3xl w-full h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
@@ -463,7 +489,7 @@
 
   <!-- ================= 診探員糾錯報告 (彈出視窗 Modal) ================= -->
   <div id="error-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-all duration-300">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-rose-100 space-y-4 transform transition-all scale-100 animate-in fade-in zoom-in duration-200">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-rose-100 space-y-4">
       
       <!-- 標題 -->
       <div class="flex items-center gap-3 border-b border-rose-100 pb-3">
@@ -600,8 +626,9 @@
     let userMarkings = [];
     let totalScore = 0;
     let step1Answer = null;
+    let questionScores = [0, 0, 0, 0, 0];
 
-    // 學生個人資料與歷程資料庫 (數據結構)
+    // 學生個人資料與歷程資料庫
     let currentStudent = {
       class: '',
       seat: '',
@@ -609,7 +636,7 @@
       loginTime: ''
     };
 
-    // 記錄當前題目的詳細動作 (劃線錯誤記錄、診斷選擇)
+    // 記錄當前題目的詳細動作
     let currentQuestionLog = {
       markingAttempts: 0,
       wrongMarkingDetails: [],
@@ -667,6 +694,11 @@
     // 當前同學作答題目紀錄陣列
     let myQuestionLogs = [];
 
+    function updateTotalScoreDisplay() {
+      totalScore = questionScores.reduce((acc, val) => acc + val, 0);
+      document.getElementById('score-display').innerText = totalScore;
+    }
+
     // 處理學生登入
     function handleStudentLogin(e) {
       e.preventDefault();
@@ -674,7 +706,7 @@
       const seat = document.getElementById('login-seat').value.trim();
       const name = document.getElementById('login-name').value.trim();
 
-      if(!cls || !seat || !name) return;
+      if (!cls || !seat || !name) return;
 
       currentStudent = {
         class: cls,
@@ -687,7 +719,6 @@
       document.getElementById('current-student-badge').classList.remove('hidden');
       document.getElementById('login-modal').classList.add('hidden');
 
-      // 初始化載入第一題
       loadQuestion();
     }
 
@@ -695,7 +726,6 @@
     function loadQuestion() {
       const ex = exercises[currentQ];
       
-      // 重置當前題目的動作 Log
       currentQuestionLog = {
         qIndex: currentQ,
         sentenceText: ex.tokens.map(t => t.text).join(' '),
@@ -745,7 +775,6 @@
         span.className = 'word-chip inline-block px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 text-base sm:text-lg font-medium cursor-pointer shadow-xs';
         span.innerText = item.text;
         
-        // 套用已選顏色
         if (userMarkings[index] === 'yellow') span.classList.add('bg-highlight-yellow');
         if (userMarkings[index] === 'red') span.classList.add('bg-highlight-red');
         if (userMarkings[index] === 'blue') span.classList.add('bg-highlight-blue');
@@ -787,6 +816,29 @@
       renderSentence();
     }
 
+    // 顯示糾錯分析彈出視窗
+    function showErrorModal(errors) {
+      const listEl = document.getElementById('error-list');
+      listEl.innerHTML = '';
+
+      errors.forEach(err => {
+        const item = document.createElement('div');
+        item.className = 'bg-rose-50 border border-rose-200 rounded-xl p-3 flex items-start gap-2.5 text-rose-900 font-medium leading-relaxed';
+        item.innerHTML = `
+          <span class="text-lg shrink-0">${err.icon}</span>
+          <div>${err.msg}</div>
+        `;
+        listEl.appendChild(item);
+      });
+
+      document.getElementById('error-modal').classList.remove('hidden');
+    }
+
+    // 關閉糾錯分析彈出視窗
+    function closeErrorModal() {
+      document.getElementById('error-modal').classList.add('hidden');
+    }
+
     // 第一階段完成：嚴格逐詞標記檢查與診斷器開啟
     function startDiagnostic() {
       const ex = exercises[currentQ];
@@ -803,7 +855,7 @@
         if (userMark !== correctMark) {
           let markName = "無色";
           if (userMark === 'yellow') markName = "黃色 (本體)";
-          if (userMark === 'red') markName = "紅色 (喻詞)";
+          if (userMark === 'red') markName = "紅色 (喻詞／繫詞)";
           if (userMark === 'blue') markName = "藍色 (喻體)";
 
           if (correctMark === 'yellow') {
@@ -838,16 +890,14 @@
         }
       });
 
-      // 紀錄標記詳情
       currentQuestionLog.userFinalMarkings = [...userMarkings];
 
-      // 檢查結果判斷
       if (errors.length > 0) {
         currentQuestionLog.wrongMarkingDetails.push(...markingLogDetails);
         showErrorModal(errors);
       } else {
-        totalScore += 50;
-        document.getElementById('score-display').innerText = totalScore;
+        questionScores[currentQ] = 50;
+        updateTotalScoreDisplay();
         
         // 渲染大字體彩色結構標示句子（貫穿第 1 步、第 2 步及診斷結果頁）
         const diagSentenceContainer = document.getElementById('diagnosed-sentence-display');
@@ -888,6 +938,12 @@
       }
     }
 
+    // 返回第一步
+    function backToStep1() {
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+    }
+
     // 診斷樹 - 第二步選擇
     function chooseStep2(linkerType) {
       currentQuestionLog.step2Choice = linkerType;
@@ -903,27 +959,27 @@
       const isCorrect = (userDiagnosedType === ex.targetType);
       currentQuestionLog.isCorrect = isCorrect;
 
-      // 將當前題目的 Complete Log 保存
-      myQuestionLogs.push({ ...currentQuestionLog });
+      // 更新或儲存當前題目的 Complete Log
+      myQuestionLogs[currentQ] = { ...currentQuestionLog };
 
       if (isCorrect) {
-        totalScore += 50;
-        document.getElementById('score-display').innerText = totalScore;
+        questionScores[currentQ] = 100;
+        updateTotalScoreDisplay();
         try {
           confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
-        } catch(e) {}
+        } catch (e) {}
       }
 
       const resultHeader = document.getElementById('result-header');
       if (ex.targetType === 'jie') {
         resultHeader.className = "p-4 rounded-2xl text-center font-black text-xl shadow-md bg-amber-100 text-amber-900 border-2 border-amber-300";
-        resultHeader.innerHTML = `🎯 診斷結果：【 借 喻 】 ${isCorrect ? '✅ 診斷正確！' : '💡 需多加留意！'}<br><span class="text-xs font-normal opacity-90">主角（本體）與橋樑（喻詞）隱形了，直接借用配角（喻體）登場！</span>`;
+        resultHeader.innerHTML = `🎯 診斷結果：【 借 喻 】 ${isCorrect ? '✅ 診斷正確！' : '💡 需多加留意！'}<br><span class="text-xs font-normal opacity-90">主角（本體）與喻詞隱形了，直接借用配角（喻體）登場！</span>`;
       } else if (ex.targetType === 'ming') {
         resultHeader.className = "p-4 rounded-2xl text-center font-black text-xl shadow-md bg-emerald-100 text-emerald-900 border-2 border-emerald-300";
         resultHeader.innerHTML = `🎯 診斷結果：【 明 喻 】 ${isCorrect ? '✅ 診斷正確！' : '💡 需多加留意！'}<br><span class="text-xs font-normal opacity-90">本體、喻詞、喻體都在，並使用了「像 / 宛如」等明顯的比喻詞！</span>`;
       } else if (ex.targetType === 'an') {
         resultHeader.className = "p-4 rounded-2xl text-center font-black text-xl shadow-md bg-sky-100 text-sky-900 border-2 border-sky-300";
-        resultHeader.innerHTML = `🎯 診斷結果：【 暗 喻 】 ${isCorrect ? '✅ 診斷正確！' : '💡 需多加留意！'}<br><span class="text-xs font-normal opacity-90">本體與喻體都在，並使用了「是 / 成了 / 變成」等堅定的喻詞！</span>`;
+        resultHeader.innerHTML = `🎯 診斷結果：【 暗 喻 】 ${isCorrect ? '✅ 診斷正確！' : '💡 需多加留意！'}<br><span class="text-xs font-normal opacity-90">本體與喻體都在，並使用了「是 / 成了 / 變成」等繫詞／喻詞！</span>`;
       }
 
       document.getElementById('report-subject').innerText = ex.subjectText;
@@ -943,6 +999,32 @@
       }
     }
 
+    // 重做本題
+    function retryCurrentQuestion() {
+      questionScores[currentQ] = 0;
+      updateTotalScoreDisplay();
+      loadQuestion();
+    }
+
+    // 挑戰下一題 / 查看總結報告
+    function nextQuestion() {
+      if (currentQ < exercises.length - 1) {
+        currentQ++;
+        loadQuestion();
+      } else {
+        showSummary();
+      }
+    }
+
+    // 重新挑戰全套題目
+    function restartAll() {
+      currentQ = 0;
+      questionScores = [0, 0, 0, 0, 0];
+      myQuestionLogs = [];
+      updateTotalScoreDisplay();
+      loadQuestion();
+    }
+
     // 顯示結算畫面並將數據歸檔至 classLogs
     function showSummary() {
       document.getElementById('mark-section').classList.add('hidden');
@@ -954,9 +1036,12 @@
       let stars = '⭐☆☆';
       let mainErrorCategory = '無明顯錯誤';
 
-      // 算總錯誤次數
       let totalMarkingErrors = 0;
-      myQuestionLogs.forEach(q => { totalMarkingErrors += q.wrongMarkingDetails.length; });
+      myQuestionLogs.forEach(q => {
+        if (q && q.wrongMarkingDetails) {
+          totalMarkingErrors += q.wrongMarkingDetails.length;
+        }
+      });
 
       if (totalMarkingErrors > 3) mainErrorCategory = "修辭成分色彩混淆與過度標記";
       else if (totalMarkingErrors > 0) mainErrorCategory = "個別成分圈選未夠準確";
@@ -964,7 +1049,6 @@
       if (totalScore >= 500) stars = '⭐⭐⭐';
       else if (totalScore >= 300) stars = '⭐⭐☆';
 
-      // 將當前學生數據推入全班紀錄表
       classLogs.push({
         student: { ...currentStudent },
         totalScore: totalScore,
@@ -1004,7 +1088,6 @@
     function renderTeacherDashboard() {
       document.getElementById('stat-total-students').innerText = `${classLogs.length} 人`;
 
-      // 計算平均分與平均錯誤
       let sumScore = 0;
       let sumErrors = 0;
       classLogs.forEach(item => {
@@ -1018,9 +1101,22 @@
       document.getElementById('stat-avg-score').innerText = `${avgScore} 分`;
       document.getElementById('stat-avg-errors').innerText = `${avgErrors} 次`;
 
-      // 渲染學生表格
       const tbody = document.getElementById('student-table-body');
       tbody.innerHTML = '';
+
+      if (classLogs.length === 0) {
+        document.getElementById('stat-top-mistake').innerText = '暫無數據';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="p-8 text-center text-slate-400 font-bold text-sm">
+              📭 目前教師數據儀表板內暫無任何學生作答紀錄。
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      document.getElementById('stat-top-mistake').innerText = sumErrors > 0 ? '修辭成分色彩混淆' : '無明顯錯誤';
 
       classLogs.forEach((log, index) => {
         const tr = document.createElement('tr');
@@ -1060,27 +1156,25 @@
       container.innerHTML = '';
 
       log.questionLogs.forEach((qLog, i) => {
+        if (!qLog) return;
         const ex = exercises[i];
         const card = document.createElement('div');
         card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3";
 
-        // 題目頭條
         let statusBadge = qLog.isCorrect 
           ? `<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full">✅ 診斷正確 (+100分)</span>`
           : `<span class="bg-rose-100 text-rose-800 text-xs font-bold px-2.5 py-0.5 rounded-full">❌ 診斷有誤</span>`;
 
-        // 標記嘗試紀錄列表
         let wrongDetailsHtml = qLog.wrongMarkingDetails.length > 0
           ? qLog.wrongMarkingDetails.map(d => `<li class="text-rose-700">⚠️ ${d}</li>`).join('')
           : `<li class="text-emerald-700">✨ 一次性 100% 標記正確！</li>`;
 
-        // 診斷樹選擇文字
         let step1Text = qLog.step1Choice ? '✅ 有出現本體' : '❌ 沒有出現本體（本體隱形）';
         let step2Text = qLog.step2Choice === 'ming' ? '👉 明喻詞 (像/彷彿...)' : (qLog.step2Choice === 'an' ? '👉 暗喻詞 (是/成了...)' : '（未進入第2步）');
 
         card.innerHTML = `
           <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-            <span class="font-bold text-sm text-slate-800">第 ${i + 1} 題：${ex.tokens.map(t=>t.text).join('')}</span>
+            <span class="font-bold text-sm text-slate-800">第 ${i + 1} 題：${ex.tokens.map(t => t.text).join('')}</span>
             ${statusBadge}
           </div>
 
@@ -1112,82 +1206,45 @@
       document.getElementById('student-detail-modal').classList.add('hidden');
     }
 
+    // 開啟清除數據確認彈窗
+    function openClearConfirmModal() {
+      document.getElementById('clear-confirm-modal').classList.remove('hidden');
+    }
+
+    // 關閉清除數據確認彈窗
+    function closeClearConfirmModal() {
+      document.getElementById('clear-confirm-modal').classList.add('hidden');
+    }
+
+    // 確認清除教師數據儀表板內的所有數據
+    function confirmClearDashboardData() {
+      classLogs = [];
+      myQuestionLogs = [];
+      closeClearConfirmModal();
+      renderTeacherDashboard();
+    }
+
     // 一鍵導出 UTF-8 CSV 文件 (帶 BOM 修正 Excel 亂碼)
     function exportToCSV() {
-      let csvContent = "\uFEFF"; // 加入 UTF-8 BOM
-      csvContent += "班別,座號,姓名,總得分,評級,標記錯誤次數,主要錯誤歸因,登入時間\n";
+      if (classLogs.length === 0) {
+        alert("目前儀表板內暫無學生數據可導出！");
+        return;
+      }
 
+      let csvContent = "\uFEFF班別,座號,姓名,總得分,評級,標記錯誤總數,主要錯誤原因歸因,登入時間\n";
       classLogs.forEach(log => {
-        const row = [
-          log.student.class,
-          log.student.seat,
-          log.student.name,
-          log.totalScore,
-          log.stars.replace(/⭐/g, '星'),
-          log.totalMarkingErrors,
-          `"${log.mainErrorCategory}"`,
-          log.student.loginTime
-        ];
-        csvContent += row.join(",") + "\n";
+        csvContent += `${log.student.class},${log.student.seat},${log.student.name},${log.totalScore},${log.stars},${log.totalMarkingErrors},"${log.mainErrorCategory}",${log.student.loginTime}\n`;
       });
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", `比喻小診探_全班學習歷程數據_${new Date().toISOString().slice(0,10)}.csv`);
-      document.body.appendChild(link);
+      link.href = URL.createObjectURL(blob);
+      link.download = `5D班_比喻小診探_學習數據報告_${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
-      document.body.removeChild(link);
     }
 
-    // 顯示標記糾錯彈窗 Modal
-    function showErrorModal(errors) {
-      const container = document.getElementById('error-list');
-      container.innerHTML = '';
-      errors.forEach(err => {
-        const div = document.createElement('div');
-        div.className = 'bg-rose-50 border border-rose-200 rounded-xl p-2.5 flex items-start gap-2 text-rose-900 text-xs sm:text-sm font-medium';
-        div.innerHTML = `<span class="text-base">${err.icon}</span><div>${err.msg}</div>`;
-        container.appendChild(div);
-      });
-      document.getElementById('error-modal').classList.remove('hidden');
-    }
-
-    // 關閉標記糾錯彈窗 Modal
-    function closeErrorModal() {
-      document.getElementById('error-modal').classList.add('hidden');
-    }
-
-    // 診斷樹返回第一步
-    function backToStep1() {
-      document.getElementById('step2').classList.add('hidden');
-      document.getElementById('step1').classList.remove('hidden');
-    }
-
-    // 重做當前題目
-    function retryCurrentQuestion() {
-      loadQuestion();
-    }
-
-    // 進入下一題或查看總結
-    function nextQuestion() {
-      if (currentQ < exercises.length - 1) {
-        currentQ++;
-        loadQuestion();
-      } else {
-        showSummary();
-      }
-    }
-
-    // 重新開始挑戰全套題目
-    function restartAll() {
-      currentQ = 0;
-      totalScore = 0;
-      myQuestionLogs = [];
-      document.getElementById('score-display').innerText = '0';
-      loadQuestion();
-    }
+    // 預設初始化第一題畫面（登入後會重新載入）
+    loadQuestion();
   </script>
 </body>
 </html>
