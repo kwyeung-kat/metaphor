@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>比喻小診探 🔍 | 樂華天主教小學中文科電子學習平台</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti (彩花慶祝特效) -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Fonts: Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #e0e7ff 100%);
+      min-height: 100vh;
+    }
+    
+    .word-chip {
+      transition: all 0.2s ease-in-out;
+      user-select: none;
+    }
+    
+    .word-chip:hover {
+      transform: translateY(-2px);
+    }
+    
+    /* 標記色彩樣式 */
+    .bg-highlight-yellow {
+      background-color: #fef08a !important;
+      border-color: #eab308 !important;
+      color: #854d0e !important;
+      font-weight: 700;
+      box-shadow: 0 3px 6px rgba(234, 179, 8, 0.25);
+    }
+    
+    .bg-highlight-red {
+      background-color: #fca5a5 !important;
+      border-color: #ef4444 !important;
+      color: #991b1b !important;
+      font-weight: 700;
+      box-shadow: 0 3px 6px rgba(239, 68, 68, 0.25);
+    }
+    
+    .bg-highlight-blue {
+      background-color: #93c5fd !important;
+      border-color: #3b82f6 !important;
+      color: #1e40af !important;
+      font-weight: 700;
+      box-shadow: 0 3px 6px rgba(59, 130, 246, 0.25);
+    }
+
+    .pulse-btn {
+      animation: pulse-ring 2s infinite;
+    }
+
+    @keyframes pulse-ring {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+  </style>
+</head>
+<body class="py-6 px-3 sm:px-6">
+
+  <!-- 主容器 -->
+  <div class="max-w-2xl mx-auto bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/60 overflow-hidden transition-all duration-300 relative">
+    
+    <!-- 頂部頁眉與進度條 -->
+    <div class="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white p-5 sm:p-6 relative">
+      <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl sm:text-4xl">🔍</span>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-black tracking-wide">比喻小診探</h1>
+            <p class="text-xs text-indigo-200">香港小學中文修辭工作坊 (學生歷程追蹤版)</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <!-- 當前學生標籤 -->
+          <div id="current-student-badge" class="bg-indigo-800/80 text-indigo-100 text-xs px-3 py-1.5 rounded-xl border border-indigo-400/40 font-bold flex items-center gap-1.5 hidden">
+            <span>👤</span> <span id="student-name-display">--</span>
+          </div>
+
+          <!-- 教師儀表板切換按鈕 -->
+          <button onclick="toggleTeacherDashboard()" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs sm:text-sm font-extrabold px-3 py-1.5 rounded-xl border border-amber-300 shadow-md transition flex items-center gap-1">
+            <span>📊</span> 教師數據儀表板
+          </button>
+
+          <!-- 得分與星星 -->
+          <div class="bg-white/20 backdrop-blur-md rounded-2xl px-3 py-1 text-right border border-white/20 shadow-xs">
+            <div class="text-[10px] text-indigo-100 font-medium">獲得星數</div>
+            <div class="text-lg sm:text-xl font-extrabold text-yellow-300 flex items-center justify-end gap-1">
+              <span>⭐</span> <span id="score-display">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 進度條 -->
+      <div class="w-full bg-indigo-950/40 rounded-full h-3 p-0.5 border border-indigo-400/30">
+        <div id="progress-bar" class="bg-gradient-to-r from-yellow-400 to-amber-300 h-full rounded-full transition-all duration-500" style="width: 20%;"></div>
+      </div>
+      <div class="flex justify-between text-xs text-indigo-200 mt-1.5 font-medium">
+        <span id="q-num-text">題目 1 / 5</span>
+        <span id="progress-percent">20% 完成</span>
+      </div>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div class="p-4 sm:p-6">
+
+      <!-- ================= 階段一：句子圈選標記區 ================= -->
+      <div id="mark-section" class="space-y-5">
+        
+        <!-- 教學提示區 -->
+        <div class="bg-indigo-50 border-l-4 border-indigo-500 rounded-r-2xl p-4 shadow-sm">
+          <div class="flex items-center gap-2 text-indigo-900 font-bold text-sm sm:text-base mb-1">
+            <span>💡 診探員線索指引：</span>
+          </div>
+          <p id="teach-hint" class="text-xs sm:text-sm text-indigo-800 leading-relaxed">
+            --
+          </p>
+        </div>
+
+        <!-- 現實場景說明卡 -->
+        <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center">
+          <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider block mb-1">👁️ 眼睛看見的客觀事實（現實）：</span>
+          <div class="flex justify-center items-center gap-3">
+            <span id="scene-icon" class="text-3xl sm:text-4xl">🏠👦</span>
+            <span id="scene-target" class="text-sm sm:text-base font-bold text-emerald-900 bg-white px-3 py-1.5 rounded-xl border border-emerald-300 shadow-xs">
+              --
+            </span>
+          </div>
+        </div>
+
+        <!-- 彩筆選擇工具列 -->
+        <div>
+          <div class="text-xs font-bold text-slate-500 mb-2 flex items-center justify-between">
+            <span>🎨 請選擇彩筆並點擊下方字詞進行圈選：</span>
+            <button onclick="resetCurrentMarking()" class="text-indigo-600 hover:text-indigo-800 font-bold text-xs underline">重置所有顏色</button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button class="color-btn btn-yellow bg-amber-100 hover:bg-amber-200 text-amber-900 border-2 border-amber-400 active-tool px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex flex-col items-center justify-center shadow-xs" onclick="setTool('yellow', this)">
+              <span>💛 畫黃色</span>
+              <span class="text-[10px] opacity-80">(本體/主角)</span>
+            </button>
+            <button class="color-btn btn-red bg-rose-100 hover:bg-rose-200 text-rose-900 border-2 border-transparent px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex flex-col items-center justify-center shadow-xs" onclick="setTool('red', this)">
+              <span>🔴 畫紅色</span>
+              <span class="text-[10px] opacity-80">(喻詞/繫詞)</span>
+            </button>
+            <button class="color-btn btn-blue bg-sky-100 hover:bg-sky-200 text-sky-900 border-2 border-transparent px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex flex-col items-center justify-center shadow-xs" onclick="setTool('blue', this)">
+              <span>💙 畫藍色</span>
+              <span class="text-[10px] opacity-80">(喻體/配角)</span>
+            </button>
+            <button class="color-btn btn-eraser bg-slate-100 hover:bg-slate-200 text-slate-700 border-2 border-transparent px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex flex-col items-center justify-center shadow-xs" onclick="setTool('eraser', this)">
+              <span>🧹 橡皮擦</span>
+              <span class="text-[10px] opacity-80">(清除顏色)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 句子互動區 -->
+        <div class="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-5 min-h-[90px] flex flex-wrap justify-center items-center gap-2 shadow-inner" id="sentence-container">
+          <!-- 字詞標籤由 JS 動態生成 -->
+        </div>
+
+        <!-- 開啟診斷器按鈕 -->
+        <button onclick="startDiagnostic()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-base sm:text-lg py-4 rounded-2xl shadow-lg hover:shadow-indigo-200 transition duration-200 flex items-center justify-center gap-2 pulse-btn">
+          🩺 標記完成，開啟診斷器！
+        </button>
+      </div>
+
+      <!-- ================= 階段二：診斷樹區 ================= -->
+      <div id="diagnostic-section" class="hidden space-y-5">
+        
+        <!-- 標記成功通過反饋卡 -->
+        <div class="bg-emerald-50 border border-emerald-300 rounded-2xl p-4 text-emerald-900 text-sm leading-relaxed shadow-xs flex items-start gap-3">
+          <span class="text-2xl">🎉</span>
+          <div>
+            <div class="font-bold text-base text-emerald-950 mb-0.5">標記 100% 完全正確！</div>
+            <p id="success-marking-text" class="text-xs sm:text-sm text-emerald-800">
+              你已精準標出句中的關鍵修辭成分，成功獲得標記獎勵星數！請繼續進行診斷樹判定。
+            </p>
+          </div>
+        </div>
+
+        <!-- 當前診斷句子大字體結構標示區（貫穿第 1 步、第 2 步及診斷結果頁） -->
+        <div class="bg-white border-2 border-indigo-200 rounded-2xl p-5 shadow-md text-center space-y-3">
+          <div class="flex flex-wrap items-center justify-center gap-2 text-xs font-bold text-slate-500">
+            <span>📌 正在診斷的句子：</span>
+            <span class="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">💛 本體/主角</span>
+            <span class="bg-rose-100 text-rose-900 px-2 py-0.5 rounded-md">🔴 喻詞/繫詞</span>
+            <span class="bg-sky-100 text-sky-900 px-2 py-0.5 rounded-md">💙 喻體/配角</span>
+          </div>
+          <div id="diagnosed-sentence-display" class="flex flex-wrap justify-center items-center gap-2.5 py-2 text-2xl sm:text-3xl font-black leading-relaxed">
+            <!-- JS 動態生成大字體彩色標示句子 -->
+          </div>
+        </div>
+
+        <!-- 診斷樹 - 第一步：尋找本體 -->
+        <div id="step1" class="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-center space-y-4">
+          <div class="inline-block bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full">
+            【第 1 步】尋找本體（主角）
+          </div>
+          <h2 class="text-lg font-bold text-slate-800">句中有沒有出現 💛 黃色本體（真實主角）？</h2>
+          <p class="text-xs sm:text-sm text-slate-500">提示：讀一讀句子，看看被描寫的真正事物是否有直接寫在句子中。</p>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <button onclick="chooseStep1(false)" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition flex flex-col items-center justify-center gap-0.5 text-sm">
+              <span>❌ 沒有出現本體</span>
+              <span class="text-xs font-normal opacity-85">(主角隱形未寫出)</span>
+            </button>
+            <button onclick="chooseStep1(true)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition flex flex-col items-center justify-center gap-0.5 text-sm">
+              <span>✅ 有出現本體</span>
+              <span class="text-xs font-normal opacity-85">(真實主角有寫出來)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 診斷樹 - 第二步：辨識喻詞 -->
+        <div id="step2" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-5 text-center space-y-4">
+          <div class="inline-block bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full">
+            【第 2 步】辨識喻詞 / 繫詞
+          </div>
+          <h2 class="text-lg font-bold text-slate-800">句子的 🔴 紅色喻詞／繫詞屬於哪種詞語？</h2>
+          <p class="text-xs sm:text-sm text-slate-500">觀察連接本體與喻體之間的關鍵字：</p>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <button onclick="chooseStep2('ming')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition text-sm">
+              👉 像 / 彷彿 / 宛如 / 猶如 / 如
+            </button>
+            <button onclick="chooseStep2('an')" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition text-sm">
+              👉 是 / 成了 / 變成 / 作為
+            </button>
+          </div>
+
+          <button onclick="backToStep1()" class="text-slate-500 hover:text-slate-700 text-xs font-bold pt-2 underline inline-block">
+            ⬅️ 返回上一步
+          </button>
+        </div>
+
+        <!-- 診斷結果與詳細拆解報告卡 -->
+        <div id="diagnostic-result-card" class="hidden space-y-4">
+          
+          <!-- 診斷結論標籤 -->
+          <div id="result-header" class="p-4 rounded-2xl text-center font-black text-xl shadow-md">
+            <!-- 結論 -->
+          </div>
+
+          <!-- 詳細三要素拆解與賞析卡 -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+            <h3 class="font-bold text-slate-800 text-sm border-b pb-2 flex items-center gap-1.5">
+              <span>📋</span> 比喻修辭結構拆解報告
+            </h3>
+            
+            <div class="grid grid-cols-3 gap-2 text-center text-xs sm:text-sm">
+              <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-xl">
+                <span class="text-amber-800 font-bold block mb-1">💛 本體 (主角)</span>
+                <span id="report-subject" class="font-extrabold text-amber-950">--</span>
+              </div>
+              <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-xl">
+                <span class="text-rose-800 font-bold block mb-1">🔴 喻詞 / 繫詞</span>
+                <span id="report-linker" class="font-extrabold text-rose-950">--</span>
+              </div>
+              <div class="bg-sky-50 border border-sky-200 p-2.5 rounded-xl">
+                <span class="text-sky-800 font-bold block mb-1">💙 喻體 (配角)</span>
+                <span id="report-object" class="font-extrabold text-sky-950">--</span>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <span class="text-xs font-bold text-indigo-900 block mb-1">✨ 修辭優美之處賞析：</span>
+              <p id="report-analysis" class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                --
+              </p>
+            </div>
+          </div>
+
+          <!-- 操作按鈕區 -->
+          <div class="flex gap-3">
+            <button onclick="retryCurrentQuestion()" class="w-1/3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3.5 rounded-xl text-sm transition">
+              🔄 重做本題
+            </button>
+            <button id="next-q-btn" onclick="nextQuestion()" class="w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-xl text-sm shadow-md transition">
+              ➡️ 挑戰下一題
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= 階段三：全課總結與結算畫面 ================= -->
+      <div id="summary-section" class="hidden text-center space-y-6 py-4">
+        <div class="text-6xl animate-bounce">🏆</div>
+        <div>
+          <h2 class="text-2xl font-black text-slate-800 mb-1">恭喜完成比喻診探挑戰！</h2>
+          <p class="text-sm text-slate-600">你已成功掌握小學中文核心比喻修辭法！</p>
+        </div>
+
+        <!-- 最終成績卡片 -->
+        <div class="bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200 rounded-3xl p-6 max-w-md mx-auto shadow-sm">
+          <div class="text-xs text-indigo-600 font-bold mb-1">最終獲得總得分</div>
+          <div class="text-4xl sm:text-5xl font-black text-indigo-900 mb-3" id="final-score">0</div>
+          
+          <div class="flex justify-center text-3xl gap-1 mb-4" id="final-stars">
+            <!-- 評級星星 -->
+          </div>
+
+          <div id="final-evaluation" class="bg-white p-4 rounded-2xl text-xs sm:text-sm font-medium text-slate-700 shadow-xs border border-indigo-100">
+            --
+          </div>
+        </div>
+
+        <button onclick="restartAll()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-base py-4 px-8 rounded-2xl shadow-lg transition duration-200">
+          🔄 重新挑戰全套題目
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 頁尾宣告 -->
+    <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 text-center text-xs text-slate-500">
+      香港小學語文科《課程指引》修辭教學輔助工具 · 專為小四至小六學生設計
+    </div>
+  </div>
+
+  <!-- ================= 學生身份登記彈窗 (Student Login Modal) ================= -->
+  <div id="login-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-indigo-100 space-y-5 animate-in fade-in zoom-in duration-200">
+      <div class="text-center space-y-2">
+        <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-3xl mx-auto font-black shadow-inner">
+          🎒
+        </div>
+        <h2 class="text-2xl font-black text-slate-800">歡迎來到比喻小診探！</h2>
+        <p class="text-xs text-slate-500">請輸入你的班別、座號與姓名，開啟學習之旅：</p>
+      </div>
+
+      <form onsubmit="handleStudentLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">班別 (例如：5D)</label>
+          <input type="text" id="login-class" required placeholder="5D" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none font-bold text-slate-800 text-sm">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">座號 (例如：08)</label>
+            <input type="text" id="login-seat" required placeholder="08" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none font-bold text-slate-800 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">學生姓名</label>
+            <input type="text" id="login-name" required placeholder="陳小明" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none font-bold text-slate-800 text-sm">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-xl text-base shadow-lg transition">
+          🚀 開始進行比喻診探挑戰！
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= 教師數據儀表板彈窗 (Teacher Dashboard Modal) ================= -->
+  <div id="teacher-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 z-50 hidden">
+    <div class="bg-white rounded-3xl max-w-4xl w-full h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      
+      <!-- 頂部標題列 -->
+      <div class="bg-indigo-900 text-white p-5 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">📊</span>
+          <div>
+            <h2 class="text-lg font-black tracking-wide">教師數據儀表板 (全班學習歷程分析)</h2>
+            <p class="text-xs text-indigo-200">實時監控學生劃線標記軌跡、診斷樹選擇與錯誤原因歸因</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="exportToCSV()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs px-3 py-2 rounded-xl shadow transition flex items-center gap-1">
+            <span>📥</span> 導出 CSV 數據
+          </button>
+          <button onclick="toggleTeacherDashboard()" class="text-indigo-200 hover:text-white font-bold text-xl px-2">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- 儀表板內容滾動區 -->
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1 bg-slate-50">
+        
+        <!-- 統計數據卡片區 -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-xs font-bold text-slate-500 block mb-1">已完成練習人數</span>
+            <span id="stat-total-students" class="text-2xl font-black text-indigo-900">0 人</span>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-xs font-bold text-slate-500 block mb-1">全班平均得分</span>
+            <span id="stat-avg-score" class="text-2xl font-black text-emerald-600">0 分</span>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-xs font-bold text-slate-500 block mb-1">標記平均錯誤次數</span>
+            <span id="stat-avg-errors" class="text-2xl font-black text-amber-600">0 次</span>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-xs font-bold text-slate-500 block mb-1">最主要迷思類別</span>
+            <span id="stat-top-mistake" class="text-xs font-black text-rose-600 block truncate">修辭成分色彩混淆</span>
+          </div>
+        </div>
+
+        <!-- 全班學生總覽表格 -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="p-4 border-b border-slate-100 font-bold text-sm text-slate-800 flex justify-between items-center">
+            <span>👥 全班學生作答總覽</span>
+            <span class="text-xs font-normal text-slate-500">點擊個別學生列可展開「詳細歷程軌跡」</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-100 text-slate-600 uppercase text-[11px] font-bold">
+                <tr>
+                  <th class="p-3">學生 (班別/座號/姓名)</th>
+                  <th class="p-3">總得分</th>
+                  <th class="p-3">評級</th>
+                  <th class="p-3">標記錯誤總數</th>
+                  <th class="p-3">主要錯誤原因歸因</th>
+                  <th class="p-3 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="student-table-body" class="divide-y divide-slate-100 font-medium">
+                <!-- JS 動態生成 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 學生個人詳細歷程 Modal (Student Log Detail Modal) ================= -->
+  <div id="student-detail-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 z-50 hidden">
+    <div class="bg-white rounded-3xl max-w-3xl w-full h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+      
+      <!-- 標頭 -->
+      <div class="bg-slate-800 text-white p-5 flex justify-between items-center shrink-0">
+        <div>
+          <h3 class="font-black text-lg flex items-center gap-2">
+            <span>👤</span> <span id="detail-student-title">陳小明 的完整學習歷程軌跡</span>
+          </h3>
+          <p class="text-xs text-slate-300">記載每題圈選顏色紀錄、診斷樹路徑及嘗試細節</p>
+        </div>
+        <button onclick="closeStudentDetailModal()" class="text-slate-400 hover:text-white font-bold text-xl px-2">✕</button>
+      </div>
+
+      <!-- 詳情滾動區 -->
+      <div id="student-detail-content" class="p-5 overflow-y-auto space-y-4 flex-1 bg-slate-50">
+        <!-- JS 動態生成題目軌跡卡片 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 診探員糾錯報告 (彈出視窗 Modal) ================= -->
+  <div id="error-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-all duration-300">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-rose-100 space-y-4 transform transition-all scale-100 animate-in fade-in zoom-in duration-200">
+      
+      <!-- 標題 -->
+      <div class="flex items-center gap-3 border-b border-rose-100 pb-3">
+        <div class="w-10 h-10 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-xl font-black shrink-0">
+          🔍
+        </div>
+        <div>
+          <h3 class="text-lg font-black text-slate-800">診探員糾錯分析報告</h3>
+          <p class="text-xs text-rose-600 font-bold">標記未完全正確，請根據線索修正塗色：</p>
+        </div>
+      </div>
+
+      <!-- 錯處詳細清單 -->
+      <div id="error-list" class="space-y-2.5 max-h-60 overflow-y-auto pr-1 text-xs sm:text-sm">
+        <!-- JS 動態插入錯處說明 -->
+      </div>
+
+      <!-- 說明備註 (完全規範繁體中文) -->
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 font-medium leading-relaxed">
+        💡 <b>溫馨提醒：</b><br>
+        * <b>黃色</b>：客觀現實主角（本體）<br>
+        * <b>紅色</b>：連接詞語（喻詞／繫詞）<br>
+        * <b>藍色</b>：借用發想配角（喻體）<br>
+        * <b>橡皮擦</b>：無關字詞與標點符號請保持空白無色
+      </div>
+
+      <!-- 操作按鈕區 -->
+      <button onclick="closeErrorModal()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold py-3.5 rounded-xl text-base shadow-md transition duration-150">
+        ✏️ 我明白了，立刻修正劃線！
+      </button>
+    </div>
+  </div>
+
+  <!-- JavaScript 邏輯程式碼 -->
+  <script>
+    // 5 大代表性題型題目庫 (逐詞嚴格對應 correct 顏色)
+    const exercises = [
+      {
+        id: 1,
+        tokens: [
+          { text: "弟弟的臉蛋", correct: "yellow", name: "本體/主角" },
+          { text: "像", correct: "red", name: "喻詞/繫詞" },
+          { text: "一個", correct: null, name: "數量詞" },
+          { text: "紅蘋果", correct: "blue", name: "喻體/配角" },
+          { text: "。", correct: null, name: "標點" }
+        ],
+        hint: "看一看眼前場景，我們真正看到的事物（本體/主角）是<b>「弟弟的臉蛋」</b>！請用黃色圈出它。",
+        icon: "🏠👦",
+        realTarget: "弟弟的臉蛋",
+        targetType: "ming", // 明喻
+        subjectText: "弟弟的臉蛋",
+        linkerText: "像",
+        objectText: "紅蘋果",
+        analysis: "將「弟弟紅通通的臉蛋」比作「紅蘋果」，運用了喻詞「像」，生動形象地突顯了弟弟臉蛋的紅潤與可愛。"
+      },
+      {
+        id: 2,
+        tokens: [
+          { text: "老師", correct: "yellow", name: "本體/主角" },
+          { text: "是", correct: "red", name: "喻詞/繫詞" },
+          { text: "一盞", correct: null, name: "數量詞" },
+          { text: "指引方向的", correct: null, name: "修飾語" },
+          { text: "明燈", correct: "blue", name: "喻體/配角" },
+          { text: "。", correct: null, name: "標點" }
+        ],
+        hint: "站在講台上默默付出、教導我們的人是<b>「老師」</b>！請用黃色圈出它。",
+        icon: "🏫👩‍🏫",
+        realTarget: "老師",
+        targetType: "an", // 暗喻
+        subjectText: "老師",
+        linkerText: "是",
+        objectText: "明燈",
+        analysis: "把「老師」直接比作「明燈」，使用了繫詞（喻詞）「是」，強調了老師在學習道路上給予我們的指引與光明。"
+      },
+      {
+        id: 3,
+        tokens: [
+          { text: "夜空中", correct: null, name: "地點" },
+          { text: "，", correct: null, name: "標點" },
+          { text: "無數的", correct: null, name: "數量詞" },
+          { text: "鑽石", correct: "blue", name: "喻體/配角" },
+          { text: "閃閃發光", correct: null, name: "形容詞" },
+          { text: "。", correct: null, name: "標點" }
+        ],
+        hint: "抬頭看夜空，我們實際上看到的是<b>「星星」</b>。但請讀讀句子，句中有寫出「星星」這兩個字嗎？（本體隱形，未寫出）",
+        icon: "🌌⭐",
+        realTarget: "星星（留意：句中隱形，未寫出！）",
+        targetType: "jie", // 借喻
+        subjectText: "無（隱形）",
+        linkerText: "無（隱形）",
+        objectText: "鑽石",
+        analysis: "本體「星星」和喻詞都沒有出現，直接借用「鑽石」來代表夜空中的星星，讓句子更具詩意與想像力。"
+      },
+      {
+        id: 4,
+        tokens: [
+          { text: "彎彎的月亮", correct: "yellow", name: "本體/主角" },
+          { text: "宛如", correct: "red", name: "喻詞/繫詞" },
+          { text: "一把", correct: null, name: "數量詞" },
+          { text: "金色的小鐮刀", correct: "blue", name: "喻體/配角" },
+          { text: "。", correct: null, name: "標點" }
+        ],
+        hint: "夜空中掛着的景象，我們真實看到的事物是<b>「彎彎的月亮」</b>！請用黃色圈出它。",
+        icon: "🌙✨",
+        realTarget: "彎彎的月亮",
+        targetType: "ming", // 明喻
+        subjectText: "彎彎的月亮",
+        linkerText: "宛如",
+        objectText: "金色的小鐮刀",
+        analysis: "以喻詞「宛如」連結「彎彎的月亮」與「金色的小鐮刀」，生動地描繪出新月彎曲的形狀與耀眼的光芒。"
+      },
+      {
+        id: 5,
+        tokens: [
+          { text: "天空中的雲朵", correct: "yellow", name: "本體/主角" },
+          { text: "變成了", correct: "red", name: "喻詞/繫詞" },
+          { text: "奔跑的白羊", correct: "blue", name: "喻體/配角" },
+          { text: "。", correct: null, name: "標點" }
+        ],
+        hint: "仰望藍天，真正存在並變化着的事物是<b>「天空中的雲朵」</b>！請用黃色圈出它。",
+        icon: "☁️🐑",
+        realTarget: "天空中的雲朵",
+        targetType: "an", // 暗喻
+        subjectText: "天空中的雲朵",
+        linkerText: "變成了",
+        objectText: "奔跑的白羊",
+        analysis: "使用了「變成了」作為喻詞，把「雲朵」與「奔跑的白羊」結合起來，極具動態美感與童趣。"
+      }
+    ];
+
+    // 全局狀態
+    let currentQ = 0;
+    let currentTool = 'yellow';
+    let userMarkings = [];
+    let totalScore = 0;
+    let step1Answer = null;
+
+    // 學生個人資料與歷程資料庫 (數據結構)
+    let currentStudent = {
+      class: '',
+      seat: '',
+      name: '',
+      loginTime: ''
+    };
+
+    // 記錄當前題目的詳細動作 (劃線錯誤記錄、診斷選擇)
+    let currentQuestionLog = {
+      markingAttempts: 0,
+      wrongMarkingDetails: [],
+      step1Choice: null,
+      step2Choice: null,
+      finalResult: false
+    };
+
+    // 所有學生的數據庫 (預載 3 位示範學生資料供老師觀察)
+    let classLogs = [
+      {
+        student: { class: "5D", seat: "01", name: "張大文", loginTime: "10:15" },
+        totalScore: 500,
+        stars: "⭐⭐⭐",
+        totalMarkingErrors: 0,
+        mainErrorCategory: "無明顯錯誤（表現優異）",
+        questionLogs: [
+          { qIndex: 0, markingAttempts: 1, wrongMarkingDetails: [], step1Choice: true, step2Choice: "ming", isCorrect: true },
+          { qIndex: 1, markingAttempts: 1, wrongMarkingDetails: [], step1Choice: true, step2Choice: "an", isCorrect: true },
+          { qIndex: 2, markingAttempts: 1, wrongMarkingDetails: [], step1Choice: false, step2Choice: null, isCorrect: true },
+          { qIndex: 3, markingAttempts: 1, wrongMarkingDetails: [], step1Choice: true, step2Choice: "ming", isCorrect: true },
+          { qIndex: 4, markingAttempts: 1, wrongMarkingDetails: [], step1Choice: true, step2Choice: "an", isCorrect: true }
+        ]
+      },
+      {
+        student: { class: "5D", seat: "02", name: "李小華", loginTime: "10:18" },
+        totalScore: 400,
+        stars: "⭐⭐☆",
+        totalMarkingErrors: 2,
+        mainErrorCategory: "修辭成分色彩混淆",
+        questionLogs: [
+          { qIndex: 0, markingAttempts: 2, wrongMarkingDetails: ["將「像」誤塗為藍色 (喻體)"], step1Choice: true, step2Choice: "ming", isCorrect: true },
+          { qIndex: 1, markingAttempts: 1, wrongMarkingDetails: [], step1Choice: true, step2Choice: "an", isCorrect: true },
+          { qIndex: 2, markingAttempts: 2, wrongMarkingDetails: ["將「夜空中」誤塗為黃色 (本體)"], step1Choice: false, step2Choice: null, isCorrect: true },
+          { qIndex: 3, markingAttempts: 1, wrongMarkingDetails: [], step1Choice: true, step2Choice: "ming", isCorrect: true },
+          { qIndex: 4, markingAttempts: 1, wrongMarkingDetails: [], step1Choice: true, step2Choice: "an", isCorrect: true }
+        ]
+      },
+      {
+        student: { class: "5D", seat: "03", name: "黃美美", loginTime: "10:20" },
+        totalScore: 300,
+        stars: "⭐☆☆",
+        totalMarkingErrors: 4,
+        mainErrorCategory: "借喻本體隱形概念未掌握",
+        questionLogs: [
+          { qIndex: 0, markingAttempts: 2, wrongMarkingDetails: ["將「一個」誤塗為紅色 (喻詞)"], step1Choice: true, step2Choice: "ming", isCorrect: true },
+          { qIndex: 1, markingAttempts: 1, wrongMarkingDetails: [], step1Choice: true, step2Choice: "an", isCorrect: true },
+          { qIndex: 2, markingAttempts: 3, wrongMarkingDetails: ["以為「鑽石」是本體黃色", "錯誤選擇「✅ 有出現本體」"], step1Choice: true, step2Choice: "ming", isCorrect: false },
+          { qIndex: 3, markingAttempts: 1, wrongMarkingDetails: [], step1Choice: true, step2Choice: "ming", isCorrect: true },
+          { qIndex: 4, markingAttempts: 1, wrongMarkingDetails: [], step1Choice: true, step2Choice: "an", isCorrect: true }
+        ]
+      }
+    ];
+
+    // 當前同學作答題目紀錄陣列
+    let myQuestionLogs = [];
+
+    // 處理學生登入
+    function handleStudentLogin(e) {
+      e.preventDefault();
+      const cls = document.getElementById('login-class').value.trim();
+      const seat = document.getElementById('login-seat').value.trim();
+      const name = document.getElementById('login-name').value.trim();
+
+      if(!cls || !seat || !name) return;
+
+      currentStudent = {
+        class: cls,
+        seat: seat,
+        name: name,
+        loginTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      document.getElementById('student-name-display').innerText = `${cls} (${seat}) ${name}`;
+      document.getElementById('current-student-badge').classList.remove('hidden');
+      document.getElementById('login-modal').classList.add('hidden');
+
+      // 初始化載入第一題
+      loadQuestion();
+    }
+
+    // 載入題目時初始化該題 Log
+    function loadQuestion() {
+      const ex = exercises[currentQ];
+      
+      // 重置當前題目的動作 Log
+      currentQuestionLog = {
+        qIndex: currentQ,
+        sentenceText: ex.tokens.map(t => t.text).join(' '),
+        userFinalMarkings: [],
+        markingAttempts: 0,
+        wrongMarkingDetails: [],
+        step1Choice: null,
+        step2Choice: null,
+        isCorrect: false
+      };
+
+      // 更新頁面文字與進度
+      document.getElementById('q-num-text').innerText = `題目 ${currentQ + 1} / ${exercises.length}`;
+      const percent = Math.round(((currentQ + 1) / exercises.length) * 100);
+      document.getElementById('progress-percent').innerText = `${percent}% 完成`;
+      document.getElementById('progress-bar').style.width = `${percent}%`;
+
+      document.getElementById('teach-hint').innerHTML = ex.hint;
+      document.getElementById('scene-icon').innerText = ex.icon;
+      document.getElementById('scene-target').innerText = ex.realTarget;
+
+      // 重置標記陣列
+      userMarkings = new Array(ex.tokens.length).fill(null);
+
+      // 構建字詞卡片
+      renderSentence();
+
+      // 切換視圖至標記階段
+      document.getElementById('mark-section').classList.remove('hidden');
+      document.getElementById('diagnostic-section').classList.add('hidden');
+      document.getElementById('summary-section').classList.add('hidden');
+
+      // 重置診斷樹視圖
+      document.getElementById('step1').classList.remove('hidden');
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('diagnostic-result-card').classList.add('hidden');
+    }
+
+    // 渲染句子字詞標籤
+    function renderSentence() {
+      const ex = exercises[currentQ];
+      const container = document.getElementById('sentence-container');
+      container.innerHTML = '';
+
+      ex.tokens.forEach((item, index) => {
+        const span = document.createElement('span');
+        span.className = 'word-chip inline-block px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 text-base sm:text-lg font-medium cursor-pointer shadow-xs';
+        span.innerText = item.text;
+        
+        // 套用已選顏色
+        if (userMarkings[index] === 'yellow') span.classList.add('bg-highlight-yellow');
+        if (userMarkings[index] === 'red') span.classList.add('bg-highlight-red');
+        if (userMarkings[index] === 'blue') span.classList.add('bg-highlight-blue');
+
+        span.onclick = function() { applyColor(index); };
+        container.appendChild(span);
+      });
+    }
+
+    // 設定目前彩筆工具
+    function setTool(color, btn) {
+      currentTool = color;
+      document.querySelectorAll('.color-btn').forEach(b => {
+        b.classList.remove('border-amber-400', 'border-rose-400', 'border-sky-400', 'border-slate-400');
+        b.classList.add('border-transparent');
+      });
+      if (btn) {
+        btn.classList.remove('border-transparent');
+        if (color === 'yellow') btn.classList.add('border-amber-400');
+        if (color === 'red') btn.classList.add('border-rose-400');
+        if (color === 'blue') btn.classList.add('border-sky-400');
+        if (color === 'eraser') btn.classList.add('border-slate-400');
+      }
+    }
+
+    // 套用或塗抹顏色
+    function applyColor(index) {
+      if (currentTool === 'eraser') {
+        userMarkings[index] = null;
+      } else {
+        userMarkings[index] = currentTool;
+      }
+      renderSentence();
+    }
+
+    // 重置當前圈選標記
+    function resetCurrentMarking() {
+      userMarkings = new Array(exercises[currentQ].tokens.length).fill(null);
+      renderSentence();
+    }
+
+    // 第一階段完成：嚴格逐詞標記檢查與診斷器開啟
+    function startDiagnostic() {
+      const ex = exercises[currentQ];
+      const errors = [];
+      const markingLogDetails = [];
+
+      currentQuestionLog.markingAttempts++;
+
+      // 逐詞嚴格對應比對
+      ex.tokens.forEach((token, idx) => {
+        const userMark = userMarkings[idx];
+        const correctMark = token.correct;
+
+        if (userMark !== correctMark) {
+          let markName = "無色";
+          if (userMark === 'yellow') markName = "黃色 (本體)";
+          if (userMark === 'red') markName = "紅色 (喻詞)";
+          if (userMark === 'blue') markName = "藍色 (喻體)";
+
+          if (correctMark === 'yellow') {
+            errors.push({
+              text: token.text,
+              icon: '💛',
+              msg: `「<b>${token.text}</b>」是客觀現實中的主角（本體），請塗上<b>黃色</b>！`
+            });
+            markingLogDetails.push(`將本體「${token.text}」誤標為 ${markName}`);
+          } else if (correctMark === 'red') {
+            errors.push({
+              text: token.text,
+              icon: '🔴',
+              msg: `「<b>${token.text}</b>」是連接主角與配角的詞語（喻詞／繫詞），請塗上<b>紅色</b>！`
+            });
+            markingLogDetails.push(`將喻詞/繫詞「${token.text}」誤標為 ${markName}`);
+          } else if (correctMark === 'blue') {
+            errors.push({
+              text: token.text,
+              icon: '💙',
+              msg: `「<b>${token.text}</b>」是借用發想過來的配角（喻體），請塗上<b>藍色</b>！`
+            });
+            markingLogDetails.push(`將喻體「${token.text}」誤標為 ${markName}`);
+          } else if (correctMark === null) {
+            errors.push({
+              text: token.text,
+              icon: '🧹',
+              msg: `「<b>${token.text}</b>」不是修辭的核心成分，請用<b>橡皮擦</b>擦掉色塊！`
+            });
+            markingLogDetails.push(`過度標記無關字詞「${token.text}」為 ${markName}`);
+          }
+        }
+      });
+
+      // 紀錄標記詳情
+      currentQuestionLog.userFinalMarkings = [...userMarkings];
+
+      // 檢查結果判斷
+      if (errors.length > 0) {
+        currentQuestionLog.wrongMarkingDetails.push(...markingLogDetails);
+        showErrorModal(errors);
+      } else {
+        totalScore += 50;
+        document.getElementById('score-display').innerText = totalScore;
+        
+        // 渲染大字體彩色結構標示句子（貫穿第 1 步、第 2 步及診斷結果頁）
+        const diagSentenceContainer = document.getElementById('diagnosed-sentence-display');
+        diagSentenceContainer.innerHTML = '';
+        ex.tokens.forEach(token => {
+          const span = document.createElement('span');
+          span.innerText = token.text;
+          if (token.correct === 'yellow') {
+            span.className = 'px-3.5 py-1.5 rounded-2xl border-2 bg-highlight-yellow';
+          } else if (token.correct === 'red') {
+            span.className = 'px-3.5 py-1.5 rounded-2xl border-2 bg-highlight-red';
+          } else if (token.correct === 'blue') {
+            span.className = 'px-3.5 py-1.5 rounded-2xl border-2 bg-highlight-blue';
+          } else {
+            span.className = 'px-1.5 py-1 text-slate-700';
+          }
+          diagSentenceContainer.appendChild(span);
+        });
+
+        document.getElementById('mark-section').classList.add('hidden');
+        document.getElementById('diagnostic-section').classList.remove('hidden');
+
+        document.getElementById('success-marking-text').innerHTML = 
+          `你已精準標出黃色本體「<b>${ex.subjectText}</b>」、紅色喻詞/繫詞「<b>${ex.linkerText}</b>」與藍色喻體「<b>${ex.objectText}</b>」，成功獲得標記獎賞 <b>+50 星數</b>！`;
+      }
+    }
+
+    // 診斷樹 - 第一步選擇
+    function chooseStep1(hasSubject) {
+      step1Answer = hasSubject;
+      currentQuestionLog.step1Choice = hasSubject;
+
+      if (!hasSubject) {
+        showFinalDiagnosis('jie');
+      } else {
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+      }
+    }
+
+    // 診斷樹 - 第二步選擇
+    function chooseStep2(linkerType) {
+      currentQuestionLog.step2Choice = linkerType;
+      showFinalDiagnosis(linkerType);
+    }
+
+    // 顯示診斷結果與詳細卡片
+    function showFinalDiagnosis(userDiagnosedType) {
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.add('hidden');
+
+      const ex = exercises[currentQ];
+      const isCorrect = (userDiagnosedType === ex.targetType);
+      currentQuestionLog.isCorrect = isCorrect;
+
+      // 將當前題目的 Complete Log 保存
+      myQuestionLogs.push({ ...currentQuestionLog });
+
+      if (isCorrect) {
+        totalScore += 50;
+        document.getElementById('score-display').innerText = totalScore;
+        try {
+          confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+        } catch(e) {}
+      }
+
+      const resultHeader = document.getElementById('result-header');
+      if (ex.targetType === 'jie') {
+        resultHeader.className = "p-4 rounded-2xl text-center font-black text-xl shadow-md bg-amber-100 text-amber-900 border-2 border-amber-300";
+        resultHeader.innerHTML = `🎯 診斷結果：【 借 喻 】 ${isCorrect ? '✅ 診斷正確！' : '💡 需多加留意！'}<br><span class="text-xs font-normal opacity-90">主角（本體）與橋樑（喻詞）隱形了，直接借用配角（喻體）登場！</span>`;
+      } else if (ex.targetType === 'ming') {
+        resultHeader.className = "p-4 rounded-2xl text-center font-black text-xl shadow-md bg-emerald-100 text-emerald-900 border-2 border-emerald-300";
+        resultHeader.innerHTML = `🎯 診斷結果：【 明 喻 】 ${isCorrect ? '✅ 診斷正確！' : '💡 需多加留意！'}<br><span class="text-xs font-normal opacity-90">本體、喻詞、喻體都在，並使用了「像 / 宛如」等明顯的比喻詞！</span>`;
+      } else if (ex.targetType === 'an') {
+        resultHeader.className = "p-4 rounded-2xl text-center font-black text-xl shadow-md bg-sky-100 text-sky-900 border-2 border-sky-300";
+        resultHeader.innerHTML = `🎯 診斷結果：【 暗 喻 】 ${isCorrect ? '✅ 診斷正確！' : '💡 需多加留意！'}<br><span class="text-xs font-normal opacity-90">本體與喻體都在，並使用了「是 / 成了 / 變成」等堅定的喻詞！</span>`;
+      }
+
+      document.getElementById('report-subject').innerText = ex.subjectText;
+      document.getElementById('report-linker').innerText = ex.linkerText;
+      document.getElementById('report-object').innerText = ex.objectText;
+      document.getElementById('report-analysis').innerText = ex.analysis;
+
+      document.getElementById('diagnostic-result-card').classList.remove('hidden');
+
+      const nextBtn = document.getElementById('next-q-btn');
+      if (currentQ === exercises.length - 1) {
+        nextBtn.innerText = "🏆 查看總結報告";
+        nextBtn.className = "w-2/3 bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3.5 rounded-xl text-sm shadow-md transition";
+      } else {
+        nextBtn.innerText = "➡️ 挑戰下一題";
+        nextBtn.className = "w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-xl text-sm shadow-md transition";
+      }
+    }
+
+    // 顯示結算畫面並將數據歸檔至 classLogs
+    function showSummary() {
+      document.getElementById('mark-section').classList.add('hidden');
+      document.getElementById('diagnostic-section').classList.add('hidden');
+      document.getElementById('summary-section').classList.remove('hidden');
+
+      document.getElementById('final-score').innerText = totalScore;
+
+      let stars = '⭐☆☆';
+      let mainErrorCategory = '無明顯錯誤';
+
+      // 算總錯誤次數
+      let totalMarkingErrors = 0;
+      myQuestionLogs.forEach(q => { totalMarkingErrors += q.wrongMarkingDetails.length; });
+
+      if (totalMarkingErrors > 3) mainErrorCategory = "修辭成分色彩混淆與過度標記";
+      else if (totalMarkingErrors > 0) mainErrorCategory = "個別成分圈選未夠準確";
+
+      if (totalScore >= 500) stars = '⭐⭐⭐';
+      else if (totalScore >= 300) stars = '⭐⭐☆';
+
+      // 將當前學生數據推入全班紀錄表
+      classLogs.push({
+        student: { ...currentStudent },
+        totalScore: totalScore,
+        stars: stars,
+        totalMarkingErrors: totalMarkingErrors,
+        mainErrorCategory: mainErrorCategory,
+        questionLogs: [...myQuestionLogs]
+      });
+
+      const starsContainer = document.getElementById('final-stars');
+      const evalBox = document.getElementById('final-evaluation');
+
+      if (totalScore >= 500) {
+        starsContainer.innerHTML = '⭐⭐⭐';
+        evalBox.innerHTML = '🎓 <b>評級：比喻大師！</b><br>太厲害了！你能完美分辨明喻、暗喻與借喻，修辭標記與診斷功力十分紮實！';
+      } else if (totalScore >= 300) {
+        starsContainer.innerHTML = '⭐⭐☆';
+        evalBox.innerHTML = '👍 <b>評級：資深診探員！</b><br>你對比喻修辭有相當好的理解，繼續保持，多注意「借喻」中隱形的本體！';
+      } else {
+        starsContainer.innerHTML = '⭐☆☆';
+        evalBox.innerHTML = '💪 <b>評級：修辭實習生！</b><br>再接再厲！建議多觀察句中的喻詞（像 vs 是），多練習幾次一定會更棒！';
+      }
+    }
+
+    // 開啟/關閉教師儀表板
+    function toggleTeacherDashboard() {
+      const modal = document.getElementById('teacher-modal');
+      if (modal.classList.contains('hidden')) {
+        renderTeacherDashboard();
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    // 渲染教師數據儀表板內容
+    function renderTeacherDashboard() {
+      document.getElementById('stat-total-students').innerText = `${classLogs.length} 人`;
+
+      // 計算平均分與平均錯誤
+      let sumScore = 0;
+      let sumErrors = 0;
+      classLogs.forEach(item => {
+        sumScore += item.totalScore;
+        sumErrors += item.totalMarkingErrors;
+      });
+
+      const avgScore = classLogs.length ? Math.round(sumScore / classLogs.length) : 0;
+      const avgErrors = classLogs.length ? (sumErrors / classLogs.length).toFixed(1) : 0;
+
+      document.getElementById('stat-avg-score').innerText = `${avgScore} 分`;
+      document.getElementById('stat-avg-errors').innerText = `${avgErrors} 次`;
+
+      // 渲染學生表格
+      const tbody = document.getElementById('student-table-body');
+      tbody.innerHTML = '';
+
+      classLogs.forEach((log, index) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-indigo-50/50 transition cursor-pointer";
+        tr.onclick = function() { openStudentDetailModal(index); };
+
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-slate-800">
+            ${log.student.class} (${log.student.seat}) ${log.student.name}
+          </td>
+          <td class="p-3 font-extrabold text-indigo-900">${log.totalScore} 分</td>
+          <td class="p-3">${log.stars}</td>
+          <td class="p-3 font-bold ${log.totalMarkingErrors > 0 ? 'text-amber-600' : 'text-emerald-600'}">
+            ${log.totalMarkingErrors} 次
+          </td>
+          <td class="p-3">
+            <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold ${log.totalMarkingErrors > 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
+              ${log.mainErrorCategory}
+            </span>
+          </td>
+          <td class="p-3 text-center">
+            <button onclick="event.stopPropagation(); openStudentDetailModal(${index});" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-3 py-1 rounded-lg text-xs transition">
+              🔍 詳情
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 開啟學生個人詳細歷程彈窗
+    function openStudentDetailModal(index) {
+      const log = classLogs[index];
+      document.getElementById('detail-student-title').innerText = `${log.student.class} ${log.student.seat} ${log.student.name} 的學習歷程軌跡`;
+      
+      const container = document.getElementById('student-detail-content');
+      container.innerHTML = '';
+
+      log.questionLogs.forEach((qLog, i) => {
+        const ex = exercises[i];
+        const card = document.createElement('div');
+        card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3";
+
+        // 題目頭條
+        let statusBadge = qLog.isCorrect 
+          ? `<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full">✅ 診斷正確 (+100分)</span>`
+          : `<span class="bg-rose-100 text-rose-800 text-xs font-bold px-2.5 py-0.5 rounded-full">❌ 診斷有誤</span>`;
+
+        // 標記嘗試紀錄列表
+        let wrongDetailsHtml = qLog.wrongMarkingDetails.length > 0
+          ? qLog.wrongMarkingDetails.map(d => `<li class="text-rose-700">⚠️ ${d}</li>`).join('')
+          : `<li class="text-emerald-700">✨ 一次性 100% 標記正確！</li>`;
+
+        // 診斷樹選擇文字
+        let step1Text = qLog.step1Choice ? '✅ 有出現本體' : '❌ 沒有出現本體（本體隱形）';
+        let step2Text = qLog.step2Choice === 'ming' ? '👉 明喻詞 (像/彷彿...)' : (qLog.step2Choice === 'an' ? '👉 暗喻詞 (是/成了...)' : '（未進入第2步）');
+
+        card.innerHTML = `
+          <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+            <span class="font-bold text-sm text-slate-800">第 ${i + 1} 題：${ex.tokens.map(t=>t.text).join('')}</span>
+            ${statusBadge}
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <span class="font-bold text-slate-700 block mb-1">🎨 圈選劃線嘗試歷史 (標記錯誤 ${qLog.wrongMarkingDetails.length} 次)：</span>
+              <ul class="space-y-1 list-disc list-inside">
+                ${wrongDetailsHtml}
+              </ul>
+            </div>
+
+            <div class="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100">
+              <span class="font-bold text-indigo-900 block mb-1">🌲 診斷樹點選路徑：</span>
+              <div class="space-y-1 text-indigo-800">
+                <div>第一步：<span class="font-bold">${step1Text}</span></div>
+                <div>第二步：<span class="font-bold">${step2Text}</span></div>
+              </div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('student-detail-modal').classList.remove('hidden');
+    }
+
+    // 關閉學生個人詳細歷程彈窗
+    function closeStudentDetailModal() {
+      document.getElementById('student-detail-modal').classList.add('hidden');
+    }
+
+    // 一鍵導出 UTF-8 CSV 文件 (帶 BOM 修正 Excel 亂碼)
+    function exportToCSV() {
+      let csvContent = "\uFEFF"; // 加入 UTF-8 BOM
+      csvContent += "班別,座號,姓名,總得分,評級,標記錯誤次數,主要錯誤歸因,登入時間\n";
+
+      classLogs.forEach(log => {
+        const row = [
+          log.student.class,
+          log.student.seat,
+          log.student.name,
+          log.totalScore,
+          log.stars.replace(/⭐/g, '星'),
+          log.totalMarkingErrors,
+          `"${log.mainErrorCategory}"`,
+          log.student.loginTime
+        ];
+        csvContent += row.join(",") + "\n";
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `比喻小診探_全班學習歷程數據_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // 顯示標記糾錯彈窗 Modal
+    function showErrorModal(errors) {
+      const container = document.getElementById('error-list');
+      container.innerHTML = '';
+      errors.forEach(err => {
+        const div = document.createElement('div');
+        div.className = 'bg-rose-50 border border-rose-200 rounded-xl p-2.5 flex items-start gap-2 text-rose-900 text-xs sm:text-sm font-medium';
+        div.innerHTML = `<span class="text-base">${err.icon}</span><div>${err.msg}</div>`;
+        container.appendChild(div);
+      });
+      document.getElementById('error-modal').classList.remove('hidden');
+    }
+
+    // 關閉標記糾錯彈窗 Modal
+    function closeErrorModal() {
+      document.getElementById('error-modal').classList.add('hidden');
+    }
+
+    // 診斷樹返回第一步
+    function backToStep1() {
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+    }
+
+    // 重做當前題目
+    function retryCurrentQuestion() {
+      loadQuestion();
+    }
+
+    // 進入下一題或查看總結
+    function nextQuestion() {
+      if (currentQ < exercises.length - 1) {
+        currentQ++;
+        loadQuestion();
+      } else {
+        showSummary();
+      }
+    }
+
+    // 重新開始挑戰全套題目
+    function restartAll() {
+      currentQ = 0;
+      totalScore = 0;
+      myQuestionLogs = [];
+      document.getElementById('score-display').innerText = '0';
+      loadQuestion();
+    }
+  </script>
+</body>
+</html>
